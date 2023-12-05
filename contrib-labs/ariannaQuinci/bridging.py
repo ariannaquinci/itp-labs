@@ -27,7 +27,7 @@ def myNetwork():
     h2 = net.addHost('h2', cls=Host, ip=None, mac='00:00:10:10:00:02')
     h3 = net.addHost('h3', cls=Host, ip=None, mac='00:00:10:10:00:03')
     #add another host
-    h4 =  net.addHost('h4', cls=Host, ip=None, mac='00:00:10:10:00:04'
+    h4 =  net.addHost('h4', cls=Host, ip=None, mac='00:00:10:10:00:04')
     
 
     info( '*** Add links\n')
@@ -37,6 +37,9 @@ def myNetwork():
     Link(s1, h2, intfName1='s1-eth1')
     #net.addLink(s1, h3, 2, 0)
     Link(s1, h3, intfName1='s1-eth2')
+    #add links between the 2 switches and between s2 and h4
+    Link(s1,s2,intfName1= 's1-eth3', intfName2= 's2-eth0')
+    Link(s2, h4, intfName1= 's2-eth1')
 
     info( '*** Starting network\n')
     net.build()
@@ -56,8 +59,22 @@ def myNetwork():
     h3.cmd('sysctl -w net.ipv6.conf.all.disable_ipv6=1')
     h3.cmd('sysctl -w net.ipv6.conf.default.disable_ipv6=1')
 
+    s2.cmd('sysctl -w net.ipv6.conf.all.disable_ipv6=1')
+    s2.cmd('sysctl -w net.ipv6.conf.default.disable_ipv6=1')
 
+    h4.cmd('sysctl -w net.ipv6.conf.all.disable_ipv6=1')
+    h4.cmd('sysctl -w net.ipv6.conf.default.disable_ipv6=1')
+    
     info( '*** Post configure switches and hosts\n')
+    h1.cmd('ip a a 10.0.0.1/24 dev h1-eth0\n')
+    h2.cmd('ip a a 10.0.0.2/24 dev h2-eth0\n')
+    h3.cmd('ip a a 10.0.0.3/24 dev h3-eth0\n')
+    h4.cmd('ip a a 10.0.0.4/24 dev h4-eth0\n')
+
+    s1.cmd('ip link add br0 type bridge\nip link set s1-eth0 master br0\nip link set s1-eth1 master br0\nip link set s1-eth2 master br0\nip link set s1-eth3 master br0\nip link set br0 up\n')
+    s2.cmd('ip link add br0 type bridge\nip link set s2-eth0 master br0\nip link set s2-eth1 master br0\nip link set br0 up\n')
+
+    
 
     CLI(net)
     net.stop()
